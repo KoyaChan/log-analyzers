@@ -14,7 +14,7 @@ class LogAnalyze
     end
   end
 
-  def initialize(logpath, outpath= 'result.csv')
+  def initialize(logpath, outpath: 'result.csv')
     self.logfile = logpath
     self.outfile = outpath
     self.file_num = 0
@@ -67,4 +67,4 @@ class LogAnalyze
   end
 end
 
-LogAnalyze.new(ARGV[0]).scan_it
+LogAnalyze.new(ARGV[0], outpath: ARGV[1]).scan_it
