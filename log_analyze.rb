@@ -7,14 +7,14 @@ Encoding.default_internal = 'UTF-8'
 class LogAnalyze
   attr_accessor :logfile, :log_record, :file_num, :csv_file, :outfile
 
-  Items = [:file_id, :file_path, :file_size, :bof_time, :eof_time]
-  LogRecord = Struct.new(*Items) do
+  ITEMS = [:file_id, :file_path, :file_size, :bof_time, :eof_time].map(&:freeze).freeze
+  LogRecord = Struct.new(*ITEMS) do
     def duration
       Time.parse(eof_time) - Time.parse(bof_time)
     end
   end
 
-  def initialize(logpath, outpath = 'result.csv')
+  def initialize(logpath, outpath= 'result.csv')
     self.logfile = logpath
     self.outfile = outpath
     self.file_num = 0
@@ -26,7 +26,7 @@ class LogAnalyze
     self.csv_file = CSV.open(
       "./#{outfile}",
       'wb+',
-      headers: Items << :duration,
+      headers: ITEMS + [:duration],
       write_headers: true,
       encoding: 'UTF-16LE'
     )
