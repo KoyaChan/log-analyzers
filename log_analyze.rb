@@ -9,6 +9,7 @@ class LogAnalyze
 
   SCAN_PATTERN = /(201[7-8]-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})  <.*>  ([^ ]+) (.*$)/
   ITEMS = %i[file_id file_path file_size bof_time eof_time].map(&:freeze).freeze
+
   LogRecord = Struct.new(*ITEMS) do
     def duration
       Time.parse(eof_time) - Time.parse(bof_time)
@@ -23,23 +24,16 @@ class LogAnalyze
   end
 
   def scan_it
-    self.csv_file = CSV.open(
-      "./#{outfile}",
-      'wb+',
-      headers: ITEMS + [:duration],
-      write_headers: true,
-      encoding: 'UTF-16LE'
-    )
-
-    File.open(logfile, 'r') do |file|
-      file.each_line do |line|
-        matched = line.match(SCAN_PATTERN)
-        if matched
-          process_record if process_line(matched)
+    use_csv do
+      File.open(logfile, 'r') do |file|
+        file.each_line do |line|
+          matched = line.match(SCAN_PATTERN)
+          if matched
+            process_record if process_line(matched)
+          end
         end
       end
     end
-    csv_file.close
   end
 
   def process_line(matched)
@@ -64,6 +58,19 @@ class LogAnalyze
 
   def process_record
     csv_file << (log_record.to_a << log_record.duration)
+  end
+
+  def use_csv
+    CSV.open(
+      "./#{outfile}",
+      'wb+',
+      headers: ITEMS + [:duration],
+      write_headers: true,
+      encoding: 'UTF-16LE'
+    ) do |csv|
+      self.csv_file = csv
+      yield
+    end
   end
 end
 
