@@ -5,7 +5,7 @@ Encoding.default_external = 'UTF-16LE'
 Encoding.default_internal = 'UTF-8'
 
 class NtagBackupLog
-  attr_accessor :logfile, :log_record, :file_num, :csv_file, :outfile
+  attr_accessor :logfile, :log_record, :file_num, :csv_file, :outfile, :max_duration
 
   SCAN_PATTERN = /(201[7-8]-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})  <.*>  ([^ ]+) (.*$)/
   ITEMS = %i[file_id file_path file_size bof_time eof_time].map(&:freeze).freeze
@@ -29,7 +29,7 @@ class NtagBackupLog
         file.each_line do |line|
           matched = line.match(SCAN_PATTERN)
           if matched
-            process_record if process_line(matched)
+            print_to_csv if process_line(matched)
           end
         end
       end
@@ -68,7 +68,7 @@ class NtagBackupLog
       log_record.eof_time = matched[1]
     end
 
-    def process_record
+    def print_to_csv
       duration = log_record.duration
       csv_file << (log_record.to_a << duration) # if duration > 0
     end
