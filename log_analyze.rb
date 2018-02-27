@@ -4,7 +4,7 @@ require 'csv'
 Encoding.default_external = 'UTF-16LE'
 Encoding.default_internal = 'UTF-8'
 
-class LogAnalyze
+class NtagBackupLog
   attr_accessor :logfile, :log_record, :file_num, :csv_file, :outfile
 
   SCAN_PATTERN = /(201[7-8]-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})  <.*>  ([^ ]+) (.*$)/
@@ -23,7 +23,7 @@ class LogAnalyze
     self.log_record = nil
   end
 
-  def scan_it
+  def make_csv
     use_csv do
       File.open(logfile, 'r') do |file|
         file.each_line do |line|
@@ -85,4 +85,4 @@ class LogAnalyze
   end
 end
 
-LogAnalyze.new(ARGV[0], outpath: ARGV[1]).scan_it
+NtagBackupLog.new(ARGV[0], outpath: ARGV[1]).make_csv
