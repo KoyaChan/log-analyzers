@@ -7,7 +7,7 @@ Encoding.default_internal = 'UTF-8'
 class LogAnalyze
   attr_accessor :logfile, :log_record, :file_num, :csv_file, :outfile
 
-  ITEMS = [:file_id, :file_path, :file_size, :bof_time, :eof_time].map(&:freeze).freeze
+  ITEMS = %i[file_id file_path file_size bof_time eof_time].map(&:freeze).freeze
   LogRecord = Struct.new(*ITEMS) do
     def duration
       Time.parse(eof_time) - Time.parse(bof_time)
