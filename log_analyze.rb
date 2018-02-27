@@ -23,8 +23,15 @@ class LogAnalyze
 
   def scan_it
     regex = /(2018-02-0[45] [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})  <.*>  ([^ ]+) (.*$)/
-    self.csv_file = CSV.open("./#{outfile}", 'wb+', headers: Items << :duration, write_headers: true, encoding: 'UTF-16LE')
-    File.open(logfile, "r") do |file|
+    self.csv_file = CSV.open(
+      "./#{outfile}",
+      'wb+',
+      headers: Items << :duration,
+      write_headers: true,
+      encoding: 'UTF-16LE'
+    )
+
+    File.open(logfile, 'r') do |file|
       file.each_line do |line|
         matched = line.match(regex)
         if matched
@@ -37,28 +44,27 @@ class LogAnalyze
 
   def process_line(matched)
     case matched[2]
-    when %[BOF]
+    when %(BOF)
       self.log_record = LogRecord.new
       self.file_num += 1
       log_record.file_id = file_num
       log_record.bof_time = matched[1]
       return false
-    when %[<File>]
+    when %(<File>)
       m = matched[0].match(/<File> (.+) size = ([0-9]+\|-?[0-9]+)$/)
       log_record.file_path = m[1]
       log_record.file_size = m[2]
       return false
-    when %[BackupArchiveDetail:]
+    when %(BackupArchiveDetail:)
       log_record.eof_time = matched[1]
       return true
     end
-    return false
+    false
   end
 
   def process_record
     csv_file << (log_record.to_a << log_record.duration)
   end
-
 end
 
 LogAnalyze.new(ARGV[0]).scan_it
