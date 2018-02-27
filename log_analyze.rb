@@ -39,25 +39,36 @@ class LogAnalyze
   def process_line(matched)
     case matched[2]
     when %(BOF)
-      self.log_record = LogRecord.new
-      self.file_num += 1
-      log_record.file_id = file_num
-      log_record.bof_time = matched[1]
-      return false
+      process_bof_line matched
     when %(<File>)
-      m = matched[0].match(/<File> (.+) size = ([0-9]+\|-?[0-9]+)$/)
-      log_record.file_path = m[1]
-      log_record.file_size = m[2]
-      return false
+      process_file_line matched
     when %(BackupArchiveDetail:)
-      log_record.eof_time = matched[1]
+      process_eof_time_line matched
       return true
     end
     false
   end
 
+  def process_bof_line(matched)
+    self.log_record = LogRecord.new
+    self.file_num += 1
+    log_record.file_id = file_num
+    log_record.bof_time = matched[1]
+  end
+
+  def process_file_line(matched)
+    m = matched[0].match(/<File> (.+) size = ([0-9]+\|-?[0-9]+)$/)
+    log_record.file_path = m[1]
+    log_record.file_size = m[2]
+  end
+
+  def process_eof_time_line(matched)
+    log_record.eof_time = matched[1]
+  end
+
   def process_record
-    csv_file << (log_record.to_a << log_record.duration)
+    duration = log_record.duration
+    csv_file << (log_record.to_a << duration) #if duration > 0
   end
 
   def use_csv
