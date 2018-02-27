@@ -7,6 +7,7 @@ Encoding.default_internal = 'UTF-8'
 class LogAnalyze
   attr_accessor :logfile, :log_record, :file_num, :csv_file, :outfile
 
+  SCAN_PATTERN = /(201[7-8]-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})  <.*>  ([^ ]+) (.*$)/
   ITEMS = %i[file_id file_path file_size bof_time eof_time].map(&:freeze).freeze
   LogRecord = Struct.new(*ITEMS) do
     def duration
@@ -22,7 +23,6 @@ class LogAnalyze
   end
 
   def scan_it
-    regex = /(201[7-8]-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})  <.*>  ([^ ]+) (.*$)/
     self.csv_file = CSV.open(
       "./#{outfile}",
       'wb+',
@@ -33,7 +33,7 @@ class LogAnalyze
 
     File.open(logfile, 'r') do |file|
       file.each_line do |line|
-        matched = line.match(regex)
+        matched = line.match(SCAN_PATTERN)
         if matched
           process_record if process_line(matched)
         end
