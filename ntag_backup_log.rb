@@ -53,8 +53,10 @@ class NtagBackupLog
   def each_record
     logfile.each_line do |line|
       matched = line.match(SCAN_PATTERN)
-      log_record = make_log_record(matched)
-      yield (log_record.to_a << log_record.duration)
+      if matched
+        log_record = make_log_record(matched)
+        yield (log_record.to_a << log_record.duration)
+      end
     end
     self
   end
