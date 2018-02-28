@@ -12,6 +12,7 @@ class NtagBackupLog
 
   LogRecord = Struct.new(*ITEMS) do
     def duration
+      return unless eof_time && bof_time
       Time.parse(eof_time) - Time.parse(bof_time)
     end
   end
@@ -29,7 +30,7 @@ class NtagBackupLog
         file.each_line do |line|
           matched = line.match(SCAN_PATTERN)
           if matched
-            print_to_csv if process_line(matched)
+            print_to_csv if make_record(matched, file)
           end
         end
       end
@@ -38,7 +39,19 @@ class NtagBackupLog
 
   private
 
-    def process_line(matched)
+    def make_record(matched, file)
+      self.log_record = LogRecord.new
+      loop do
+        record_end = process_a_line(matched) if matched
+        break if record_end
+        line = file.gets
+        break unless line
+        matched = line.match(SCAN_PATTERN)
+      end
+      log_record
+    end
+
+    def process_a_line(matched)
       case matched[2]
       when %(BOF)
         process_bof_line matched
@@ -52,7 +65,6 @@ class NtagBackupLog
     end
 
     def process_bof_line(matched)
-      self.log_record = LogRecord.new
       self.file_num += 1
       log_record.file_id = file_num
       log_record.bof_time = matched[1]
