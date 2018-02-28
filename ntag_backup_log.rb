@@ -17,6 +17,26 @@ class NtagBackupLog
     end
   end
 
+  def self.open(*args)
+    f = File.open(*args)
+    begin
+      ntag_backup_log = new(f)
+    rescue Exception
+      f.close
+      raise
+    end
+
+    if block_given?
+      begin
+        yield ntag_backup_log
+      ensure
+        ntag_backup_log.close
+      end
+    else
+      ntag_backup_log
+    end
+  end
+
   def initialize(logpath)
     self.logfile = logpath.is_a?(String) ? File.new(logpath) : logpath
     self.record_num = 0
@@ -103,4 +123,7 @@ class NtagBackupLog
     end
 end
 
-NtagBackupLog.new(ARGV[0]).make_csv_file.close
+# NtagBackupLog.new(ARGV[0]).make_csv_file.close
+NtagBackupLog.open(ARGV[0]) do |logfile|
+  logfile.make_csv_file
+end
