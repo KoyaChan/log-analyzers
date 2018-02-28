@@ -5,7 +5,7 @@ Encoding.default_external = 'UTF-16LE'
 Encoding.default_internal = 'UTF-8'
 
 class NtagBackupLog
-  attr_accessor :logfile, :record_num, :outfile
+  attr_accessor :logfile, :record_num
 
   SCAN_PATTERN = /(201[7-8]-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})  <.*>  ([^ ]+) (.*$)/
   ITEMS = %i[file_id file_path file_size bof_time eof_time].map(&:freeze).freeze
@@ -43,8 +43,8 @@ class NtagBackupLog
   end
 
   def make_csv_file(outpath=nil)
-    self.outfile = outpath ? outpath : File.basename(logfile, '.log') + '.csv'
-    use_csv_file do |csv_file|
+    file = outpath ? outpath : File.basename(logfile, '.log') + '.csv'
+    create_csv_file(file) do |csv_file|
       each_record { |record| print_csv_record csv_file, record }
     end
     self
@@ -110,9 +110,9 @@ class NtagBackupLog
       csv_file << record
     end
 
-    def use_csv_file
+    def create_csv_file(csv_file)
       CSV.open(
-        "./#{outfile}",
+        "./#{csv_file}",
         'wb+',
         headers: ITEMS + [:duration],
         write_headers: true,
