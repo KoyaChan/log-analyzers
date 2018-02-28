@@ -51,14 +51,21 @@ class NtagBackupLog
   end
 
   def each_record
+    while (record = next_record)
+      yield record
+    end
+    self
+  end
+
+  def next_record
     logfile.each_line do |line|
       matched = line.match(SCAN_PATTERN)
       if matched
         log_record = make_log_record(matched)
-        yield (log_record.to_a << log_record.duration)
+        return (log_record.to_a << log_record.duration)
       end
     end
-    self
+    return nil
   end
 
   def close
@@ -129,3 +136,8 @@ end
 NtagBackupLog.open(ARGV[0]) do |logfile|
   logfile.make_csv_file
 end
+
+# NtagBackupLog.open(ARGV[0]) do |logfile|
+#   p logfile.next_record
+# end
+
