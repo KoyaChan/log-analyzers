@@ -61,7 +61,7 @@ class NtagBackupLog
       matched = line.match(SCAN_PATTERN)
       if matched
         log_record = make_log_record(matched)
-        return (log_record.to_a << log_record.duration)
+        return log_record ? (log_record.to_a << log_record.duration) : nil
       end
     end
     nil
@@ -79,7 +79,7 @@ class NtagBackupLog
         record_end = process_a_line(matched, log_record) if matched
         break if record_end
         line = logfile.gets
-        break unless line
+        return nil unless line
         matched = line.match(SCAN_PATTERN)
       end
       log_record

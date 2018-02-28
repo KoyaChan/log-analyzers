@@ -2,3 +2,4 @@
 *.csv
 *.bak
 get_max.rb
+total_duration.rb
