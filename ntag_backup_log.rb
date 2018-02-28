@@ -5,10 +5,10 @@ Encoding.default_external = 'UTF-16LE'
 Encoding.default_internal = 'UTF-8'
 
 class NtagBackupLog
-  attr_accessor :logfile, :record_num
+  attr_accessor :logfile
 
   SCAN_PATTERN = /(201[7-8]-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})  <.*>  ([^ ]+) (.*$)/
-  ITEMS = %i[file_id file_path file_size bof_time eof_time].map(&:freeze).freeze
+  ITEMS = %i[file_path file_size bof_time eof_time].map(&:freeze).freeze
 
   LogRecord = Struct.new(*ITEMS) do
     def duration
@@ -39,7 +39,6 @@ class NtagBackupLog
 
   def initialize(logpath)
     self.logfile = logpath.is_a?(String) ? File.new(logpath) : logpath
-    self.record_num = 0
   end
 
   def make_csv_file(outpath=nil)
@@ -100,8 +99,6 @@ class NtagBackupLog
     end
 
     def process_bof_line(matched, log_record)
-      self.record_num += 1
-      log_record.file_id = record_num
       log_record.bof_time = matched[1]
     end
 
