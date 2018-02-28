@@ -5,10 +5,10 @@ Encoding.default_external = 'UTF-16LE'
 Encoding.default_internal = 'UTF-8'
 
 class NtagBackupLog
-  attr_accessor :logfile
+  attr_accessor :logfile, :prev_eof_time
 
   SCAN_PATTERN = /(201[7-8]-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})  <.*>  ([^ ]+) (.*$)/
-  ITEMS = %i[file_path file_size bof_time eof_time].map(&:freeze).freeze
+  ITEMS = %i[file_path file_size before_bof bof_time eof_time].map(&:freeze).freeze
 
   LogRecord = Struct.new(*ITEMS) do
     def duration
@@ -41,7 +41,7 @@ class NtagBackupLog
     self.logfile = logpath.is_a?(String) ? File.new(logpath) : logpath
   end
 
-  def make_csv_file(outpath=nil)
+  def make_csv_file(outpath = nil)
     file = outpath ? outpath : File.basename(logfile, '.log') + '.csv'
     create_csv_file(file) do |csv_file|
       each_record { |record| print_csv_record csv_file, record }
@@ -64,7 +64,7 @@ class NtagBackupLog
         return (log_record.to_a << log_record.duration)
       end
     end
-    return nil
+    nil
   end
 
   def close
@@ -100,6 +100,12 @@ class NtagBackupLog
 
     def process_bof_line(matched, log_record)
       log_record.bof_time = matched[1]
+      log_record.before_bof =
+        if prev_eof_time
+          Time.parse(log_record.bof_time) - Time.parse(prev_eof_time)
+        else
+          0
+        end
     end
 
     def process_file_line(matched, log_record)
@@ -110,6 +116,7 @@ class NtagBackupLog
 
     def process_eof_time_line(matched, log_record)
       log_record.eof_time = matched[1]
+      self.prev_eof_time = log_record.eof_time
     end
 
     def print_csv_record(csv_file, record)
@@ -130,11 +137,8 @@ class NtagBackupLog
 end
 
 # NtagBackupLog.new(ARGV[0]).make_csv_file.close
-NtagBackupLog.open(ARGV[0]) do |logfile|
-  logfile.make_csv_file
-end
+# NtagBackupLog.open(ARGV[0], &:make_csv_file)
 
 # NtagBackupLog.open(ARGV[0]) do |logfile|
 #   p logfile.next_record
 # end
-
