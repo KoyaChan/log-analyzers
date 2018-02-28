@@ -17,36 +17,40 @@ class NtagBackupLog
     end
   end
 
-  def initialize(logpath, outpath: nil)
-    self.logfile = logpath
-    self.outfile = outpath ? outpath : File.basename(logfile, '.log') + '.csv'
+  def initialize(logpath)
+    self.logfile = logpath.is_a?(String) ? File.new(logpath) : logpath
     self.record_num = 0
   end
 
-  def make_csv_file
+  def make_csv_file(outpath=nil)
+    self.outfile = outpath ? outpath : File.basename(logfile, '.log') + '.csv'
     use_csv_file do |csv_file|
       each_record { |record| print_csv_record csv_file, record }
     end
+    self
   end
 
   def each_record
-    File.open(logfile, 'r') do |file|
-      file.each_line do |line|
-        matched = line.match(SCAN_PATTERN)
-        log_record = make_log_record(matched, file)
-        yield (log_record.to_a << log_record.duration)
-      end
+    logfile.each_line do |line|
+      matched = line.match(SCAN_PATTERN)
+      log_record = make_log_record(matched)
+      yield (log_record.to_a << log_record.duration)
     end
+    self
+  end
+
+  def close
+    logfile.close
   end
 
   private
 
-    def make_log_record(matched, file)
+    def make_log_record(matched)
       log_record = LogRecord.new
       loop do
         record_end = process_a_line(matched, log_record) if matched
         break if record_end
-        line = file.gets
+        line = logfile.gets
         break unless line
         matched = line.match(SCAN_PATTERN)
       end
@@ -99,4 +103,4 @@ class NtagBackupLog
     end
 end
 
-# NtagBackupLog.new(ARGV[0]).make_csv_file
+NtagBackupLog.new(ARGV[0]).make_csv_file.close
