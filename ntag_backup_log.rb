@@ -109,9 +109,17 @@ class NtagBackupLog
     end
 
     def process_file_line(matched, log_record)
-      m = matched[0].match(/<File> (.+) size = ([0-9]+\|-?[0-9]+)$/)
+      m = matched[0].match(/<File> (.+), size = ([0-9]+\|-?[0-9]+)$/)
       log_record.file_path = m[1]
-      log_record.file_size = m[2]
+      log_record.file_size = make_filesize(m[2])
+    end
+
+    # "<num1>|<num2>" is recorded in the log. <num1> is nFileSizeHigh, 
+    # <num2> is nFileSizeLow in WIN32_FIND_DATA structure
+    def make_filesize(logged_size)
+      m = logged_size.match(/([0-9]+)\|([0-9]+)/)
+      max_dword = "ffffffff".to_i(16) + 1
+      m[1].to_i * max_dword + m[2].to_i
     end
 
     def process_eof_time_line(matched, log_record)
