@@ -1,3 +1,4 @@
+*~
 *.log
 *.csv
 *.bak
@@ -5,3 +6,4 @@ get_max.rb
 total_duration.rb
 make_csv.rb
 top30.rb
+top30_*.txt
