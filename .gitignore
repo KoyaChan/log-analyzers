@@ -2,12 +2,6 @@
 *.log
 *.csv
 *.bak
-<<<<<<< HEAD
 *.htm
-=======
-get_max.rb
-total_duration.rb
-make_csv.rb
-top30.rb
->>>>>>> a3c8911ecc28d3014251cfc780ce7a16b55803ea
-top30_*.txt
+*.png
+*.svg

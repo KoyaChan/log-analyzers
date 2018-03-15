@@ -139,7 +139,7 @@ class NtagBackupLog
     def process_file_line(matched, log_record)
       m = matched[0].match(/<File> (.+), size = ([0-9]*)\|?(-?)([0-9]+)$/)
       log_record.file_path = m[1]
-      size_low = m[3] ? '100000000'.to_i(16) - m[4].to_i : m[4].to_i
+      size_low = m[3].empty? ? m[4].to_i : '100000000'.to_i(16) - m[4].to_i
       log_record.file_size = make_filesize(m[2].to_i, size_low)
     end
 
