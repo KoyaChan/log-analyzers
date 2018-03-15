@@ -4,14 +4,42 @@ require 'csv'
 Encoding.default_external = 'UTF-16LE'
 Encoding.default_internal = 'UTF-8'
 
+# NtagBackupLog
+# reads in a client agent job log, and make a record with a pattern of lines
+# which repeats for each file backed up, like the following:
+# 2018-02-17 02:31:25.577 BOF
+#    ...
+# with the above lines, make a record below:
+#   ...
+# 
+# usage : 
+# NtagBackupLog.open('<logfile path>') do |file|
+#   file.each_record do |record|
+#   << do something with the record >>
+#   end
+# end
+#
+# Instance method make_csv_file can be used to print a csv file with the records
+# file = NtagBackupLog.new('<logfile path>')
+# file.make_csv_file('<csv file name>')
+# file.close
+#
+# when <csv file name> isn't specified, default csv file name is 
+# <base name of log file>.csv
+#
 class NtagBackupLog
+  # :prev_eof_time is the time from the eof_time of previous file, and bof_time of
+  # current file.
   attr_accessor :logfile, :prev_eof_time
-
+  
   SCAN_PATTERN = /(201[7-8]-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})  <.*>  ([^ ]+) (.*$)/
+
+  # items to be included in the record
   ITEMS = %i[file_path file_size before_bof bof_time eof_time].map(&:freeze).freeze
 
+  # structure to set the item values for the record temporarily
   LogRecord = Struct.new(*ITEMS) do
-    def duration
+    def duration  # time duration from bof_time to eof_time
       return unless eof_time && bof_time
       Time.parse(eof_time) - Time.parse(bof_time)
     end
@@ -110,13 +138,12 @@ class NtagBackupLog
 
     def process_file_line(matched, log_record)
       m = matched[0].match(/<File> (.+), size = ([0-9]*)\|?(-?)([0-9]+)$/)
-      puts matched[0] unless m
       log_record.file_path = m[1]
-      size_low = !m[3].empty? ? '100000000'.to_i(16) - m[4].to_i : m[4].to_i
+      size_low = m[3] ? '100000000'.to_i(16) - m[4].to_i : m[4].to_i
       log_record.file_size = make_filesize(m[2].to_i, size_low)
     end
 
-    # "<num1>|<num2>" is recorded in the log. <num1> is nFileSizeHigh, 
+    # "<num1>|<num2>" is recorded in the log. <num1> is nFileSizeHigh,
     # <num2> is nFileSizeLow in WIN32_FIND_DATA structure
     def make_filesize(size_high, size_low)
       max_dword = "ffffffff".to_i(16) + 1
