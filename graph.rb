@@ -31,7 +31,6 @@ Gnuplot.open do |gp|
       end
     end
     maxrec_file = File.basename(max_rec[0])
-    puts maxrec_file
     # plot.title  "#{ARGV[0]} 200000 - 280000\\n max throughput : #{y_max}"
     plot.title  "#{ARGV[0]}\\nMAX : #{y_max} byte/min (#{max_rec[3]}) \\nfile : #{maxrec_file} : #{max_rec[1]} Bytes in #{max_rec[-1]} sec"
     plot.xlabel "file count : #{i}"
